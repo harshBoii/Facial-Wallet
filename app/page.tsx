@@ -122,7 +122,7 @@ export default function HomePage() {
                   Welcome back, {user?.name || 'User'}!
                 </h2>
                 <p className="text-gray-600">
-                  You're already logged in to your Photo Wallet.
+                  You&apos;re already logged in to your Photo Wallet.
                 </p>
               </div>
               
@@ -187,10 +187,10 @@ export default function HomePage() {
               {/* Info Text */}
               <div className="text-center text-sm text-gray-600">
                 <p>
-                  First time? Click "Enroll New Face" to register your face.
+                  First time? Click &ldquo;Enroll New Face&rdquo; to register your face.
                 </p>
                 <p className="mt-1">
-                  Already enrolled? Click "Login with Face" to authenticate.
+                  Already enrolled? Click &ldquo;Login with Face&rdquo; to authenticate.
                 </p>
               </div>
             </div>

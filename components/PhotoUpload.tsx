@@ -1,41 +1,92 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
+
+interface Photo {
+  id: string;
+  filename: string;
+  originalName: string;
+  size: number;
+  uploadedAt: string;
+  url: string;
+}
 
 interface PhotoUploadProps {
-  onPhotoUploaded: (photo: any) => void;
+  onPhotoUploaded: (photo: Photo) => void;
 }
 
 export default function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle file selection
-  const handleFileSelect = (file: File) => {
+  const handleUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      alert('Please select an image file.');
       return;
     }
 
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size too large. Maximum 10MB allowed.');
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const photo = await response.json();
+        onPhotoUploaded(photo);
+        setPreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        const error = await response.text();
+        alert(`Upload failed: ${error}`);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
+
+  const handleFile = (file: File) => {
     // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+
+    // Upload file
+    handleUpload(file);
   };
 
-  // Handle file input change
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
-    }
-  };
-
-  // Handle drag and drop
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -51,68 +102,18 @@ export default function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
     e.stopPropagation();
     setDragActive(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleFileSelect(file);
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleFile(files[0]);
     }
   };
 
-  // Handle upload
-  const handleUpload = async () => {
-    if (!preview) return;
-
-    setIsUploading(true);
-
-    try {
-      // Convert base64 to blob
-      const response = await fetch(preview);
-      const blob = await response.blob();
-
-      // Create form data
-      const formData = new FormData();
-      formData.append('photo', blob, 'photo.jpg');
-
-      // Upload to server
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (uploadResponse.ok) {
-        const uploadedPhoto = await uploadResponse.json();
-        onPhotoUploaded(uploadedPhoto);
-        setPreview(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      } else {
-        const error = await uploadResponse.text();
-        alert(`Upload failed: ${error}`);
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Upload failed. Please try again.');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // Handle click to select file
   const handleClick = () => {
     fileInputRef.current?.click();
   };
 
   return (
     <div className="space-y-4">
-      {/* File Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileInputChange}
-        className="hidden"
-      />
-
       {/* Upload Area */}
       <div
         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -124,74 +125,76 @@ export default function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        onClick={handleClick}
       >
-        {preview ? (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        {isUploading ? (
           <div className="space-y-4">
-            <img
-              src={preview}
-              alt="Preview"
-              className="max-w-full max-h-64 mx-auto rounded-lg"
-            />
-            <div className="space-y-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleUpload();
-                }}
-                disabled={isUploading}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isUploading ? 'Uploading...' : 'Upload Photo'}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPreview(null);
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                  }
-                }}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ml-2"
-              >
-                Cancel
-              </button>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600">Uploading photo...</p>
+          </div>
+        ) : preview ? (
+          <div className="space-y-4">
+            <div className="relative w-32 h-32 mx-auto">
+              <Image
+                src={preview}
+                alt="Preview"
+                fill
+                className="object-cover rounded-lg"
+                sizes="128px"
+              />
             </div>
+            <p className="text-sm text-gray-500">Processing upload...</p>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="text-gray-400">
+            <div className="mx-auto w-12 h-12 text-gray-400">
               <svg
-                className="mx-auto h-12 w-12"
-                stroke="currentColor"
                 fill="none"
-                viewBox="0 0 48 48"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                className="w-full h-full"
               >
                 <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
             </div>
             <div>
               <p className="text-lg font-medium text-gray-900">
-                Upload a photo
+                Drop your photo here
               </p>
-              <p className="text-sm text-gray-500">
-                Click to select or drag and drop an image file
+              <p className="text-sm text-gray-500 mt-1">
+                or{' '}
+                <button
+                  type="button"
+                  onClick={handleClick}
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  browse files
+                </button>
               </p>
             </div>
+            <p className="text-xs text-gray-400">
+              PNG, JPG, GIF up to 10MB
+            </p>
           </div>
         )}
       </div>
 
       {/* Upload Progress */}
       {isUploading && (
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Uploading...</p>
+        <div className="bg-gray-100 rounded-full h-2">
+          <div className="bg-blue-600 h-2 rounded-full animate-pulse"></div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import * as faceapi from 'face-api.js';
 
 interface FaceRecognitionProps {
@@ -100,10 +100,10 @@ export default function FaceRecognition({
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [modelsLoaded, videoStarted, onAuthFailure]);
+  }, [modelsLoaded, videoStarted, onAuthFailure, stream]);
 
   // Handle face detection and recognition
-  const processFrame = async () => {
+  const processFrame = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current || !videoStarted) return;
     
     // Prevent processing too frequently
@@ -162,7 +162,7 @@ export default function FaceRecognition({
       onAuthFailure('Face processing failed');
       setIsProcessing(false);
     }
-  };
+  }, [videoStarted, lastProcessTime, isProcessing, isEnrolling, lastEnrollmentTime, enrollmentProgress, onAuthFailure]);
 
   // Handle face authentication
   const handleAuthentication = async (faceDescriptor: Float32Array) => {
@@ -263,7 +263,7 @@ export default function FaceRecognition({
       const interval = setInterval(processFrame, 100);
       return () => clearInterval(interval);
     }
-  }, [isLoading, modelsLoaded, videoStarted, enrollmentProgress]);
+  }, [isLoading, modelsLoaded, videoStarted, enrollmentProgress, processFrame]);
 
   return (
     <div className="relative">
