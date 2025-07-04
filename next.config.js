@@ -27,8 +27,13 @@ const nextConfig = {
   },
   // Image optimization settings
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'facial-wallet-2fxwsngre-harshboiis-projects.vercel.app'],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'facial-wallet-2fxwsngre-harshboiis-projects.vercel.app',
+        pathname: '/api/photos/**',
+      },
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -36,6 +41,8 @@ const nextConfig = {
         pathname: '/api/photos/**',
       },
     ],
+    unoptimized: false,
+    formats: ['image/webp', 'image/avif'],
   },
   // Experimental features
   experimental: {

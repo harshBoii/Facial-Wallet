@@ -46,14 +46,21 @@ export async function GET(
     const imageBuffer = await downloadImage(photo.gridfsId);
     console.log('Image downloaded, size:', imageBuffer.length);
 
-    // Return image with proper headers
-    return new NextResponse(imageBuffer, {
+    // Return image with proper headers for Next.js Image optimization
+    const response = new NextResponse(imageBuffer, {
       headers: {
         'Content-Type': photo.mimeType,
         'Content-Length': photo.size.toString(),
         'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        'Accept-Ranges': 'bytes',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD',
+        'Access-Control-Allow-Headers': 'Range',
       },
     });
+    
+    console.log('Returning image with headers:', Object.fromEntries(response.headers.entries()));
+    return response;
   } catch (error) {
     console.error('Failed to serve photo:', error);
     return NextResponse.json(
