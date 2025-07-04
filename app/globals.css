@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Custom styles for face recognition components */
+.face-camera {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.face-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+/* Smooth transitions for overlays */
+.face-overlay,
+.face-camera {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Prevent layout shifts */
+.face-camera-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stable processing overlay */
+.processing-overlay {
+  backdrop-filter: blur(2px);
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Face detection indicator */
+.face-detected-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(34, 197, 94, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 10;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.face-detection-box {
+  position: absolute;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.1);
+} 
