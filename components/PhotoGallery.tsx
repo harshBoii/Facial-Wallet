@@ -20,17 +20,22 @@ export default function PhotoGallery({ onPhotoSelect }: PhotoGalleryProps) {
   const fetchPhotos = async () => {
     try {
       setLoading(true);
+      console.log('Fetching photos...');
       const response = await fetch('/api/photos', {
         credentials: 'include'
       });
+      
+      console.log('Photos response status:', response.status);
       
       if (!response.ok) {
         throw new Error('Failed to fetch photos');
       }
       
       const data = await response.json();
-      setPhotos(data.photos || []);
+      console.log('Photos data:', data);
+      setPhotos(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error('Error fetching photos:', err);
       setError(err instanceof Error ? err.message : 'Failed to load photos');
     } finally {
       setLoading(false);

@@ -9,10 +9,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('Photo serving endpoint called for ID:', params.id);
     await connectDB();
 
     // Check authentication
     const user = await getCurrentUser(request);
+    console.log('User check for photo serving:', user ? 'authenticated' : 'not authenticated');
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -22,6 +24,7 @@ export async function GET(
 
     // Get photo metadata
     const photo = await Photo.findById(params.id);
+    console.log('Photo found:', photo ? 'yes' : 'no');
     if (!photo) {
       return NextResponse.json(
         { error: 'Photo not found' },
@@ -30,6 +33,7 @@ export async function GET(
     }
 
     // Check if user owns this photo
+    console.log('Photo owner check:', photo.userId.toString(), 'vs', user._id.toString());
     if (photo.userId.toString() !== user._id.toString()) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -38,7 +42,9 @@ export async function GET(
     }
 
     // Download image from GridFS
+    console.log('Downloading image from GridFS...');
     const imageBuffer = await downloadImage(photo.gridfsId);
+    console.log('Image downloaded, size:', imageBuffer.length);
 
     // Return image with proper headers
     return new NextResponse(imageBuffer, {

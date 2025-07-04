@@ -23,14 +23,14 @@ export default function Home() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/status', {
+      const response = await fetch('/api/auth/check', {
         credentials: 'include'
       });
       
       if (response.ok) {
         const data = await response.json();
-        setIsAuthenticated(data.authenticated);
-        setIsEnrolled(data.enrolled);
+        setIsAuthenticated(true);
+        setIsEnrolled(true);
         setUser(data.user);
       } else {
         setIsAuthenticated(false);
@@ -62,14 +62,23 @@ export default function Home() {
     }
   };
 
-  const handleEnrollmentSuccess = () => {
+  const handleEnrollmentSuccess = (userId: string) => {
     setIsEnrolled(true);
+    setIsAuthenticated(true);
     setShowEnrollment(false);
-    checkAuthStatus();
+    // After successful enrollment, the user should be authenticated
+    // We can set a basic user object since we have the userId
+    setUser({
+      id: userId,
+      name: 'User',
+      createdAt: new Date().toISOString()
+    });
   };
 
-  const handleAuthenticationSuccess = () => {
+  const handleAuthenticationSuccess = (userId: string) => {
     setIsAuthenticated(true);
+    setIsEnrolled(true);
+    // After successful authentication, get the full user details
     checkAuthStatus();
   };
 

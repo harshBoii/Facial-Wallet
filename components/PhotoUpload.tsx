@@ -36,15 +36,27 @@ export default function PhotoUpload({ onUploadSuccess, onUploadError }: PhotoUpl
       const formData = new FormData();
       formData.append('photo', file);
 
-      const response = await fetch('/api/photos/upload', {
+      const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
         credentials: 'include'
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+        let errorMessage = 'Upload failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || 'Upload failed';
+        } catch (parseError) {
+          // If response is not JSON, try to get text
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || 'Upload failed';
+          } catch (textError) {
+            errorMessage = `Upload failed with status: ${response.status}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const uploadedPhoto = await response.json();
