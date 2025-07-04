@@ -35,19 +35,65 @@ export default function FaceRecognition({
 
   // Load face-api.js models
   useEffect(() => {
-    const loadModels = async () => {
+    const loadModels = async (retryCount = 0) => {
       try {
-        console.log('Loading face-api models...');
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
-        ]);
-        console.log('Face-api models loaded successfully');
+        console.log(`Loading face-api models... (attempt ${retryCount + 1})`);
+        
+        // Add timeout and retry logic for production
+        const loadWithTimeout = async (modelLoader: Promise<any>, modelName: string) => {
+          const timeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(`Timeout loading ${modelName}`)), 30000)
+          );
+          
+          try {
+            await Promise.race([modelLoader, timeout]);
+            console.log(`${modelName} loaded successfully`);
+          } catch (error) {
+            console.error(`Failed to load ${modelName}:`, error);
+            throw error;
+          }
+        };
+
+        // Try loading models with fallback URLs
+        const loadModelWithFallback = async (modelName: string, modelLoader: () => Promise<any>) => {
+          const urls = ['/models', './models', '/public/models'];
+          
+          for (const url of urls) {
+            try {
+              console.log(`Trying to load ${modelName} from ${url}...`);
+              await loadWithTimeout(modelLoader(), modelName);
+              return;
+            } catch (error) {
+              console.warn(`Failed to load ${modelName} from ${url}:`, error);
+              if (url === urls[urls.length - 1]) {
+                throw error;
+              }
+            }
+          }
+        };
+
+        // Load models sequentially to avoid overwhelming the server
+        console.log('Loading TinyFaceDetector...');
+        await loadModelWithFallback('TinyFaceDetector', () => faceapi.nets.tinyFaceDetector.loadFromUri('/models'));
+        
+        console.log('Loading FaceLandmark68Net...');
+        await loadModelWithFallback('FaceLandmark68Net', () => faceapi.nets.faceLandmark68Net.loadFromUri('/models'));
+        
+        console.log('Loading FaceRecognitionNet...');
+        await loadModelWithFallback('FaceRecognitionNet', () => faceapi.nets.faceRecognitionNet.loadFromUri('/models'));
+        
+        console.log('All face-api models loaded successfully');
         setModelsLoaded(true);
       } catch (error) {
         console.error('Failed to load face-api models:', error);
-        onAuthFailure('Failed to load face recognition models');
+        
+        // Retry up to 2 times
+        if (retryCount < 2) {
+          console.log(`Retrying model loading... (${retryCount + 1}/2)`);
+          setTimeout(() => loadModels(retryCount + 1), 2000);
+        } else {
+          onAuthFailure('Failed to load face recognition models. Please refresh the page and try again.');
+        }
       }
     };
 
@@ -72,8 +118,18 @@ export default function FaceRecognition({
       const startVideo = async () => {
         try {
           console.log('Starting video stream...');
+          
+          // Check if getUserMedia is supported
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Camera access not supported in this browser');
+          }
+          
           const mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480 },
+            video: { 
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              facingMode: 'user'
+            },
           });
           
           if (videoRef.current) {
@@ -86,7 +142,17 @@ export default function FaceRecognition({
           console.log('Video stream started successfully');
         } catch (error) {
           console.error('Failed to access camera:', error);
-          onAuthFailure('Camera access denied');
+          let errorMessage = 'Camera access denied';
+          if (error instanceof Error) {
+            if (error.name === 'NotAllowedError') {
+              errorMessage = 'Camera access denied. Please allow camera access and try again.';
+            } else if (error.name === 'NotFoundError') {
+              errorMessage = 'No camera found. Please connect a camera and try again.';
+            } else if (error.name === 'NotSupportedError') {
+              errorMessage = 'Camera not supported in this browser. Please try a different browser.';
+            }
+          }
+          onAuthFailure(errorMessage);
         }
       };
 
@@ -117,6 +183,13 @@ export default function FaceRecognition({
 
     try {
       console.log('Processing frame...');
+      
+      // Check if video is ready
+      if (videoRef.current.readyState < 2) {
+        console.log('Video not ready yet...');
+        setIsProcessing(false);
+        return;
+      }
       
       // Detect faces in the video frame
       const detections = await faceapi
@@ -288,7 +361,7 @@ export default function FaceRecognition({
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
             <div className="text-center text-white">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-              <p>Loading camera...</p>
+              <p>{!modelsLoaded ? 'Loading face recognition models...' : 'Loading camera...'}</p>
             </div>
           </div>
         )}
