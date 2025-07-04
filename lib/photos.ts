@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { Photo } from '@/types';
 
 // Data storage paths
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -21,18 +22,13 @@ if (!fs.existsSync(PHOTOS_FILE)) {
   fs.writeFileSync(PHOTOS_FILE, JSON.stringify({}));
 }
 
-// Types
-interface Photo {
-  id: string;
+// Extended Photo type for internal storage (includes userId)
+interface StoredPhoto extends Photo {
   userId: string;
-  filename: string;
-  originalName: string;
-  url: string;
-  uploadedAt: string;
 }
 
 interface PhotosData {
-  [photoId: string]: Photo;
+  [photoId: string]: StoredPhoto;
 }
 
 // Load photos data
@@ -78,12 +74,13 @@ export function saveUploadedFile(
   fs.writeFileSync(filePath, buffer);
 
   // Create photo record
-  const photo: Photo = {
+  const photo: StoredPhoto = {
     id: photoId,
     userId,
     filename,
     originalName,
     url: `/uploads/${filename}`,
+    size: buffer.length,
     uploadedAt: new Date().toISOString(),
   };
 

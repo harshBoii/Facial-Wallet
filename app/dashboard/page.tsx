@@ -4,18 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PhotoUpload from '@/components/PhotoUpload';
 import PhotoGallery from '@/components/PhotoGallery';
-
-interface User {
-  id: string;
-  name: string;
-}
-
-interface Photo {
-  id: string;
-  filename: string;
-  url: string;
-  uploadedAt: string;
-}
+import { Photo, User } from '@/types';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -132,7 +121,10 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Upload New Photo
             </h2>
-            <PhotoUpload onPhotoUploaded={handlePhotoUploaded} />
+            <PhotoUpload 
+              onUploadSuccess={handlePhotoUploaded}
+              onUploadError={(error) => console.error('Upload error:', error)}
+            />
           </div>
 
           {/* Gallery Section */}
@@ -140,7 +132,7 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Your Photos ({photos.length})
             </h2>
-            <PhotoGallery photos={photos} onPhotoDeleted={loadPhotos} />
+            <PhotoGallery />
           </div>
         </div>
       </main>

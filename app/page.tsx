@@ -1,207 +1,314 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import FaceRecognition from '@/components/FaceRecognition';
+import PhotoUpload from '@/components/PhotoUpload';
+import PhotoGallery from '@/components/PhotoGallery';
+import { Photo } from '@/types';
 
-export default function HomePage() {
-  const [isEnrolling, setIsEnrolling] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [showEnrollment, setShowEnrollment] = useState(false);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [showPhotoGallery, setShowPhotoGallery] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Check if user is already logged in
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/check', {
-          credentials: 'include',
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData.user);
-          setIsLoggedIn(true);
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      }
-    };
-
-    checkAuth();
+    checkAuthStatus();
   }, []);
 
-  // Handle login with face recognition
-  const handleLoginWithFace = async () => {
-    setIsAuthenticating(true);
-    setShowCamera(true);
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/status', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsAuthenticated(data.authenticated);
+        setIsEnrolled(data.enrolled);
+        setUser(data.user);
+      } else {
+        setIsAuthenticated(false);
+        setIsEnrolled(false);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      setIsAuthenticated(false);
+      setIsEnrolled(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle enrollment process
-  const handleEnroll = async () => {
-    setIsEnrolling(true);
-    setShowCamera(true);
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      setIsAuthenticated(false);
+      setIsEnrolled(false);
+      setUser(null);
+      setShowEnrollment(false);
+      setShowPhotoUpload(false);
+      setShowPhotoGallery(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  // Handle successful authentication
-  const handleAuthSuccess = (userId: string) => {
-    setShowCamera(false);
-    setIsAuthenticating(false);
-    router.push('/dashboard');
+  const handleEnrollmentSuccess = () => {
+    setIsEnrolled(true);
+    setShowEnrollment(false);
+    checkAuthStatus();
   };
 
-  // Handle successful enrollment
-  const handleEnrollmentSuccess = (userId: string) => {
-    setShowCamera(false);
-    setIsEnrolling(false);
-    router.push('/dashboard');
+  const handleAuthenticationSuccess = () => {
+    setIsAuthenticated(true);
+    checkAuthStatus();
   };
 
-  // Handle authentication failure
-  const handleAuthFailure = (error: string) => {
-    setShowCamera(false);
-    setIsAuthenticating(false);
-    alert(`Authentication failed: ${error}`);
+  const handlePhotoUploadSuccess = (photo: Photo) => {
+    console.log('Photo uploaded successfully:', photo);
+    // Optionally refresh the photo gallery
+    setShowPhotoGallery(true);
   };
 
-  // Handle enrollment failure
-  const handleEnrollmentFailure = (error: string) => {
-    setShowCamera(false);
-    setIsEnrolling(false);
-    alert(`Enrollment failed: ${error}`);
+  const handlePhotoUploadError = (error: string) => {
+    console.error('Photo upload error:', error);
+    alert(`Upload failed: ${error}`);
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Photo Wallet
-          </h1>
-          <p className="text-gray-600">
-            Secure photo storage with facial recognition
-          </p>
-        </div>
-
-        {/* Camera Modal */}
-        {showCamera && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {isEnrolling ? 'Face Enrollment' : 'Face Recognition'}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {isEnrolling
-                    ? 'Please capture 5 reference images for enrollment'
-                    : 'Please look at the camera for authentication'}
-                </p>
-              </div>
-              
-              <FaceRecognition
-                isEnrolling={isEnrolling}
-                onAuthSuccess={handleAuthSuccess}
-                onAuthFailure={handleAuthFailure}
-                onEnrollmentSuccess={handleEnrollmentSuccess}
-                onEnrollmentFailure={handleEnrollmentFailure}
-                onClose={() => setShowCamera(false)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Main Content */}
-        {isLoggedIn ? (
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center space-y-6">
-              <div className="mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  Welcome back, {user?.name || 'User'}!
-                </h2>
-                <p className="text-gray-600">
-                  You&apos;re already logged in to your Photo Wallet.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Go to Dashboard
-                </button>
-                
-                <button
-                  onClick={() => router.push('/profile')}
-                  className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Edit Profile
-                </button>
-                
-                <button
-                  onClick={async () => {
-                    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                    router.push('/');
-                  }}
-                  className="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="space-y-6">
-              {/* Login Button */}
-              <button
-                onClick={handleLoginWithFace}
-                disabled={isAuthenticating}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isAuthenticating ? 'Authenticating...' : 'Login with Face'}
-              </button>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">or</span>
-                </div>
-              </div>
-
-              {/* Enrollment Button */}
-              <button
-                onClick={handleEnroll}
-                disabled={isEnrolling}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isEnrolling ? 'Enrolling...' : 'Enroll New Face'}
-              </button>
-
-              {/* Info Text */}
-              <div className="text-center text-sm text-gray-600">
-                <p>
-                  First time? Click &ldquo;Enroll New Face&rdquo; to register your face.
-                </p>
-                <p className="mt-1">
-                  Already enrolled? Click &ldquo;Login with Face&rdquo; to authenticate.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="text-center text-xs text-gray-500">
-          <p>Secure facial recognition powered by face-api.js</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Photo Wallet</h1>
+            <p className="text-gray-600">Secure facial recognition authentication</p>
+          </div>
+
+          {!isEnrolled ? (
+            <div className="space-y-4">
+              <p className="text-center text-gray-600 mb-6">
+                Welcome! To get started, you need to enroll your face for authentication.
+              </p>
+              <button
+                onClick={() => setShowEnrollment(true)}
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Enroll Face
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-center text-gray-600 mb-6">
+                Please authenticate using your face to access your photo wallet.
+              </p>
+              <button
+                onClick={() => setShowEnrollment(true)}
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Authenticate
+              </button>
+            </div>
+          )}
+
+          {showEnrollment && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">
+                    {!isEnrolled ? 'Face Enrollment' : 'Face Authentication'}
+                  </h2>
+                  <button
+                    onClick={() => setShowEnrollment(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                </div>
+                <FaceRecognition
+                  isEnrolling={!isEnrolled}
+                  onAuthSuccess={handleAuthenticationSuccess}
+                  onAuthFailure={(error) => {
+                    console.error('Authentication failed:', error);
+                    alert(`Authentication failed: ${error}`);
+                  }}
+                  onEnrollmentSuccess={handleEnrollmentSuccess}
+                  onEnrollmentFailure={(error) => {
+                    console.error('Enrollment failed:', error);
+                    alert(`Enrollment failed: ${error}`);
+                  }}
+                  onClose={() => setShowEnrollment(false)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold text-gray-900">Photo Wallet</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push('/profile')}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Welcome back!</h2>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowPhotoUpload(!showPhotoUpload);
+                  setShowPhotoGallery(false);
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  showPhotoUpload
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Upload Photo
+              </button>
+              <button
+                onClick={() => {
+                  setShowPhotoGallery(!showPhotoGallery);
+                  setShowPhotoUpload(false);
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  showPhotoGallery
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                View Gallery
+              </button>
+            </div>
+          </div>
+
+          {user && (
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Account Info</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-700">Name:</span> {user.name}
+                </div>
+                {user.email && (
+                  <div>
+                    <span className="font-medium text-gray-700">Email:</span> {user.email}
+                  </div>
+                )}
+                {user.phone && (
+                  <div>
+                    <span className="font-medium text-gray-700">Phone:</span> {user.phone}
+                  </div>
+                )}
+                {user.bio && (
+                  <div className="md:col-span-2">
+                    <span className="font-medium text-gray-700">Bio:</span> {user.bio}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Photo Upload Section */}
+        {showPhotoUpload && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload New Photo</h3>
+            <PhotoUpload
+              onUploadSuccess={handlePhotoUploadSuccess}
+              onUploadError={handlePhotoUploadError}
+            />
+          </div>
+        )}
+
+        {/* Photo Gallery Section */}
+        {showPhotoGallery && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Photo Gallery</h3>
+            <PhotoGallery />
+          </div>
+        )}
+
+        {/* Default Welcome Message */}
+        {!showPhotoUpload && !showPhotoGallery && (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="text-gray-400 mb-4">
+              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Photo Wallet</h3>
+            <p className="text-gray-600 mb-6">
+              Upload and manage your photos securely. Use the buttons above to get started.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => {
+                  setShowPhotoUpload(true);
+                  setShowPhotoGallery(false);
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
+                Upload Photo
+              </button>
+              <button
+                onClick={() => {
+                  setShowPhotoGallery(true);
+                  setShowPhotoUpload(false);
+                }}
+                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+              >
+                View Gallery
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 } 

@@ -8,6 +8,7 @@ export async function getGridFSBucket(): Promise<GridFSBucket> {
   if (!bucket) {
     await connectDB();
     const db = mongoose.connection.db;
+    if (!db) throw new Error('MongoDB connection not established');
     bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'photos' });
   }
   return bucket;
