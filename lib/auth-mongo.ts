@@ -5,15 +5,27 @@ import User from '@/models/User';
 import Session from '@/models/Session';
 
 // Face recognition utilities
+function normalizeDescriptor(descriptor: number[]): number[] {
+  // Normalize the descriptor to unit length
+  const magnitude = Math.sqrt(descriptor.reduce((sum, val) => sum + val * val, 0));
+  if (magnitude === 0) return descriptor;
+  return descriptor.map(val => val / magnitude);
+}
+
 function calculateFaceDistance(descriptor1: number[], descriptor2: number[]): number {
   if (descriptor1.length !== descriptor2.length) {
     console.log(`Descriptor length mismatch: ${descriptor1.length} vs ${descriptor2.length}`);
     throw new Error('Descriptor lengths do not match');
   }
 
+  // Normalize both descriptors before calculating distance
+  const normalized1 = normalizeDescriptor(descriptor1);
+  const normalized2 = normalizeDescriptor(descriptor2);
+
+  // Use Euclidean distance for face recognition
   let sum = 0;
-  for (let i = 0; i < descriptor1.length; i++) {
-    const diff = descriptor1[i] - descriptor2[i];
+  for (let i = 0; i < normalized1.length; i++) {
+    const diff = normalized1[i] - normalized2[i];
     sum += diff * diff;
   }
   const distance = Math.sqrt(sum);
@@ -23,12 +35,34 @@ function calculateFaceDistance(descriptor1: number[], descriptor2: number[]): nu
 
 function isFaceMatch(descriptor1: number[], descriptor2: number[]): boolean {
   const distance = calculateFaceDistance(descriptor1, descriptor2);
-  // Threshold for face matching (lower = more strict)
-  // Temporarily making threshold very lenient for debugging
-  const threshold = 1.0;
+  // Use a more lenient threshold for face matching
+  // Face-api.js typically uses 0.6 as the default threshold
+  const threshold = 0.6;
   const isMatch = distance < threshold;
   console.log(`Face match check: distance=${distance.toFixed(4)}, threshold=${threshold}, match=${isMatch}`);
   return isMatch;
+}
+
+function validateAndCleanDescriptor(descriptor: number[]): number[] {
+  // Ensure descriptor is an array of numbers
+  if (!Array.isArray(descriptor)) {
+    throw new Error('Descriptor must be an array');
+  }
+  
+  // Convert to numbers and filter out invalid values
+  const cleaned = descriptor
+    .map(val => {
+      const num = Number(val);
+      return isNaN(num) ? 0 : num;
+    })
+    .filter(val => val !== 0 || Math.random() < 0.1); // Keep some zeros but not all
+  
+  // Ensure descriptor has reasonable length (face-api.js typically uses 128 dimensions)
+  if (cleaned.length < 100) {
+    throw new Error('Descriptor too short');
+  }
+  
+  return cleaned;
 }
 
 // Session management
@@ -113,6 +147,13 @@ export async function findUserByFace(faceDescriptor: number[]): Promise<any> {
   const users = await User.find({});
   console.log(`Searching for user by face. Total users: ${users.length}`);
   
+  let bestMatch = null;
+  let bestDistance = Infinity;
+  let bestUser = null;
+  
+  // Try multiple thresholds for more robust matching
+  const thresholds = [0.4, 0.5, 0.6, 0.7, 0.8];
+  
   for (const user of users) {
     console.log(`Checking user ${user._id} with ${user.faceDescriptors.length} descriptors`);
     
@@ -128,18 +169,35 @@ export async function findUserByFace(faceDescriptor: number[]): Promise<any> {
       console.log(`  Stored descriptor ${i + 1} length: ${storedDescriptor.length}`);
       console.log(`  Sample stored values:`, storedDescriptor.slice(0, 5));
       
-      const distance = calculateFaceDistance(faceDescriptor, storedDescriptor);
-      console.log(`  Descriptor ${i + 1}: distance = ${distance.toFixed(4)}, threshold = 1.0, match = ${distance < 1.0}`);
-      
-      if (isFaceMatch(faceDescriptor, storedDescriptor)) {
-        console.log(`Found matching user: ${user._id} (${user.name})`);
-        return user;
+      try {
+        const distance = calculateFaceDistance(faceDescriptor, storedDescriptor);
+        console.log(`  Descriptor ${i + 1}: distance = ${distance.toFixed(4)}`);
+        
+        // Check against multiple thresholds
+        for (const threshold of thresholds) {
+          if (distance < threshold) {
+            console.log(`    Match found with threshold ${threshold}`);
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              bestUser = user;
+              console.log(`    New best match: ${user._id} (${user.name}) with distance ${distance.toFixed(4)}`);
+            }
+            break; // Found a match with this threshold, no need to check higher thresholds
+          }
+        }
+      } catch (error) {
+        console.log(`  Error calculating distance for descriptor ${i + 1}:`, error);
       }
     }
   }
 
-  console.log('No matching user found');
-  return null;
+  if (bestUser) {
+    console.log(`Best matching user found: ${bestUser._id} (${bestUser.name}) with distance ${bestDistance.toFixed(4)}`);
+    return bestUser;
+  } else {
+    console.log('No matching user found');
+    return null;
+  }
 }
 
 export async function getUserById(userId: string): Promise<any> {
@@ -216,4 +274,4 @@ export async function getCurrentUser(request: NextRequest): Promise<any> {
 export async function cleanupExpiredSessions(): Promise<void> {
   await connectDB();
   await Session.deleteMany({ expiresAt: { $lt: new Date() } });
-} 
+}

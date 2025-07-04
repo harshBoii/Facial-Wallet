@@ -40,6 +40,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate descriptor length (face-api.js typically uses 128 dimensions)
+    if (faceDescriptor.length < 100) {
+      console.log('Face descriptor too short in enrollment:', faceDescriptor.length);
+      return NextResponse.json(
+        { error: 'Invalid face descriptor length' },
+        { status: 400 }
+      );
+    }
+
     console.log('Face descriptor validation passed in enrollment');
     console.log('Descriptor length:', faceDescriptor.length);
     console.log('First 5 values:', faceDescriptor.slice(0, 5));

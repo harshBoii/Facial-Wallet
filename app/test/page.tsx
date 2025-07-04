@@ -64,6 +64,26 @@ export default function TestPage() {
 
       const faceDescriptor = Array.from(detections[0].descriptor);
       
+      // Test with sample mode first
+      const sampleResponse = await fetch('/api/debug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          faceDescriptor,
+          testMode: 'sample'
+        }),
+      });
+
+      if (sampleResponse.ok) {
+        const sampleResult = await sampleResponse.json();
+        console.log('Sample test result:', sampleResult);
+        
+        if (sampleResult.distance !== undefined) {
+          alert(`Sample test: Distance=${sampleResult.distance}, Threshold=0.6, Match=${sampleResult.isMatch}\nUser: ${sampleResult.user?.name || 'None'}`);
+        }
+      }
+      
+      // Test actual face matching
       const response = await fetch('/api/debug', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
