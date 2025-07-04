@@ -7,6 +7,8 @@ export default function DebugPage() {
   const [loading, setLoading] = useState(false);
   const [modelTestResult, setModelTestResult] = useState<string>('');
   const [testingModels, setTestingModels] = useState(false);
+  const [authTestResult, setAuthTestResult] = useState<any>(null);
+  const [testingAuth, setTestingAuth] = useState(false);
 
   const checkModels = async () => {
     setLoading(true);
@@ -49,6 +51,37 @@ export default function DebugPage() {
       setModelTestResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setTestingModels(false);
+    }
+  };
+
+  const testAuth = async () => {
+    setTestingAuth(true);
+    setAuthTestResult(null);
+    
+    try {
+      // Test GET request
+      const getResponse = await fetch('/api/test/auth');
+      const getData = await getResponse.json();
+      
+      // Test POST request to set a cookie
+      const postResponse = await fetch('/api/test/auth', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const postData = await postResponse.json();
+      
+      setAuthTestResult({
+        get: getData,
+        post: postData,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      setAuthTestResult({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      setTestingAuth(false);
     }
   };
 
@@ -128,6 +161,24 @@ export default function DebugPage() {
             <div className="mt-4 p-4 bg-gray-100 rounded">
               <h3 className="font-semibold mb-2">Test Results:</h3>
               <pre className="text-sm whitespace-pre-wrap">{modelTestResult}</pre>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Authentication Test</h2>
+          <button
+            onClick={testAuth}
+            disabled={testingAuth}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+          >
+            {testingAuth ? 'Testing...' : 'Test Authentication'}
+          </button>
+          
+          {authTestResult && (
+            <div className="mt-4 p-4 bg-gray-100 rounded">
+              <h3 className="font-semibold mb-2">Auth Test Results:</h3>
+              <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(authTestResult, null, 2)}</pre>
             </div>
           )}
         </div>
