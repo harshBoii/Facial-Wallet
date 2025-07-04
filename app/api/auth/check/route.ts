@@ -6,15 +6,18 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     
+    console.log('Auth check endpoint called');
     const user = await getCurrentUser(request);
     
     if (!user) {
+      console.log('No user found in session');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    console.log('User found in session:', user._id, 'Name:', user.name);
     return NextResponse.json({
       user: {
         id: user._id,

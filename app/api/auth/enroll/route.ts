@@ -9,13 +9,41 @@ export async function POST(request: NextRequest) {
     const { faceDescriptor, progress } = await request.json();
 
     console.log('Enrollment request:', { progress, descriptorLength: faceDescriptor?.length });
+    console.log('Face descriptor type:', typeof faceDescriptor);
+    console.log('Face descriptor is array:', Array.isArray(faceDescriptor));
+    console.log('Sample descriptor values:', faceDescriptor?.slice(0, 5));
 
     if (!faceDescriptor || !Array.isArray(faceDescriptor)) {
+      console.log('Invalid face descriptor format in enrollment');
       return NextResponse.json(
         { error: 'Invalid face descriptor' },
         { status: 400 }
       );
     }
+
+    // Validate descriptor values
+    if (faceDescriptor.length === 0) {
+      console.log('Empty face descriptor in enrollment');
+      return NextResponse.json(
+        { error: 'Empty face descriptor' },
+        { status: 400 }
+      );
+    }
+
+    // Check if all values are numbers
+    const hasInvalidValues = faceDescriptor.some(val => typeof val !== 'number' || isNaN(val));
+    if (hasInvalidValues) {
+      console.log('Face descriptor contains invalid values in enrollment');
+      return NextResponse.json(
+        { error: 'Invalid face descriptor values' },
+        { status: 400 }
+      );
+    }
+
+    console.log('Face descriptor validation passed in enrollment');
+    console.log('Descriptor length:', faceDescriptor.length);
+    console.log('First 5 values:', faceDescriptor.slice(0, 5));
+    console.log('Last 5 values:', faceDescriptor.slice(-5));
 
     if (typeof progress !== 'number' || progress < 1 || progress > 5) {
       return NextResponse.json(
@@ -32,7 +60,7 @@ export async function POST(request: NextRequest) {
       console.log('Creating new user with first face descriptor');
       const user = await createUser([faceDescriptor]);
       userId = user._id.toString();
-      console.log('Created user:', userId);
+      console.log('Created user:', userId, 'Name:', user.name, 'Descriptors:', user.faceDescriptors.length);
       
       // Create session on first enrollment
       sessionId = await createSession(userId);
@@ -63,6 +91,10 @@ export async function POST(request: NextRequest) {
       
       // Add face descriptor to existing user
       await addFaceDescriptor(userId, faceDescriptor);
+      
+      // Verify the descriptor was added
+      const updatedUser = await getUserById(userId);
+      console.log('Updated user descriptors:', updatedUser.faceDescriptors.length);
     }
 
     // Check if enrollment is complete
