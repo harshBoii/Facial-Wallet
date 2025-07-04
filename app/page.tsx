@@ -11,6 +11,7 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showEnrollment, setShowEnrollment] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(true);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [showPhotoGallery, setShowPhotoGallery] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -118,24 +119,52 @@ export default function Home() {
               <p className="text-center text-gray-600 mb-6">
                 Welcome! To get started, you need to enroll your face for authentication.
               </p>
-              <button
-                onClick={() => setShowEnrollment(true)}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Enroll Face
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setIsEnrolling(true);
+                    setShowEnrollment(true);
+                  }}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Enroll Face
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEnrolling(false);
+                    setShowEnrollment(true);
+                  }}
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Login with Face
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
               <p className="text-center text-gray-600 mb-6">
                 Please authenticate using your face to access your photo wallet.
               </p>
-              <button
-                onClick={() => setShowEnrollment(true)}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Authenticate
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setIsEnrolling(false);
+                    setShowEnrollment(true);
+                  }}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Authenticate
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEnrolling(true);
+                    setShowEnrollment(true);
+                  }}
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Enroll New Face
+                </button>
+              </div>
             </div>
           )}
 
@@ -144,7 +173,7 @@ export default function Home() {
               <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold">
-                    {!isEnrolled ? 'Face Enrollment' : 'Face Authentication'}
+                    {isEnrolling ? 'Face Enrollment' : 'Face Authentication'}
                   </h2>
                   <button
                     onClick={() => setShowEnrollment(false)}
@@ -154,7 +183,7 @@ export default function Home() {
                   </button>
                 </div>
                 <FaceRecognition
-                  isEnrolling={!isEnrolled}
+                  isEnrolling={isEnrolling}
                   onAuthSuccess={handleAuthenticationSuccess}
                   onAuthFailure={(error) => {
                     console.error('Authentication failed:', error);

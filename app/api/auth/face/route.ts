@@ -4,9 +4,12 @@ import connectDB from '@/lib/mongodb';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Face authentication endpoint called');
     await connectDB();
+    console.log('Database connected for face auth');
     
     const { faceDescriptor } = await request.json();
+    console.log('Face descriptor received, length:', faceDescriptor?.length);
 
     if (!faceDescriptor || !Array.isArray(faceDescriptor)) {
       return NextResponse.json(
@@ -16,6 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by face
+    console.log('Searching for user by face...');
     const user = await findUserByFace(faceDescriptor);
 
     if (!user) {
@@ -39,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Set session cookie
     response.cookies.set('session', sessionId, {
       httpOnly: false,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60, // 24 hours
       path: '/',
