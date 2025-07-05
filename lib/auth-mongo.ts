@@ -37,7 +37,7 @@ function isFaceMatch(descriptor1: number[], descriptor2: number[]): boolean {
   const distance = calculateFaceDistance(descriptor1, descriptor2);
   // Use a more lenient threshold for face matching
   // Face-api.js typically uses 0.6 as the default threshold
-  const threshold = 0.05
+  const threshold = 0.005
   ;
   const isMatch = distance < threshold;
   console.log(`Face match check: distance=${distance.toFixed(4)}, threshold=${threshold}, match=${isMatch}`);
