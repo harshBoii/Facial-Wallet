@@ -138,6 +138,12 @@ export default function Home() {
                 >
                   Login with Face
                 </button>
+                <button
+                  onClick={() => router.push('/login')}
+                  className="w-full bg-yellow-500 text-white py-3 px-4 rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  Login with OTP
+                </button>
               </div>
             </div>
           ) : (

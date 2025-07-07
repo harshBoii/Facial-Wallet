@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import connectDB from './mongodb';
 import User from '@/models/User';
 import Session from '@/models/Session';
+import OtpToken from '@/models/OtpToken';
+import nodemailer from 'nodemailer';
 
 // Face recognition utilities
 function normalizeDescriptor(descriptor: number[]): number[] {
@@ -275,4 +277,78 @@ export async function getCurrentUser(request: NextRequest): Promise<any> {
 export async function cleanupExpiredSessions(): Promise<void> {
   await connectDB();
   await Session.deleteMany({ expiresAt: { $lt: new Date() } });
+}
+
+// Email OTP utilities
+function generateOtp(length = 6): string {
+  let otp = '';
+  for (let i = 0; i < length; i++) {
+    otp += Math.floor(Math.random() * 10).toString();
+  }
+  return otp;
+}
+
+async function sendOtpEmail(email: string, otp: string): Promise<void> {
+  // Debug print for SMTP host
+  console.log('SMTP_HOST:', process.env.SMTP_HOST);
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: email,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is: ${otp}`,
+    html: `<p>Your OTP code is: <b>${otp}</b></p>`
+  });
+}
+
+export async function requestEmailLogin(email: string): Promise<{ success: boolean; message: string }> {
+  await connectDB();
+  if (!email) return { success: false, message: 'Email required' };
+
+  // Generate OTP and expiry
+  const otp = generateOtp();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // Remove previous OTPs for this email
+  await OtpToken.deleteMany({ email });
+
+  // Store new OTP
+  await OtpToken.create({ email, otp, expiresAt });
+
+  // Send OTP email
+  await sendOtpEmail(email, otp);
+
+  return { success: true, message: 'OTP sent to email' };
+}
+
+export async function verifyEmailOtp(email: string, otp: string): Promise<{ success: boolean; message: string; sessionId?: string }> {
+  await connectDB();
+  if (!email || !otp) return { success: false, message: 'Email and OTP required' };
+
+  // Find OTP token
+  const token = await OtpToken.findOne({ email, otp, used: false, expiresAt: { $gt: new Date() } });
+  if (!token) return { success: false, message: 'Invalid or expired OTP' };
+
+  // Mark OTP as used
+  token.used = true;
+  await token.save();
+
+  // Find or create user
+  let user = await User.findOne({ email });
+  if (!user) {
+    user = await User.create({ email, name: email.split('@')[0] });
+  }
+
+  // Create session
+  const sessionId = await createSession(user._id.toString());
+  return { success: true, message: 'Login successful', sessionId };
 }
