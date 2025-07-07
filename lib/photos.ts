@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { Photo } from '@/types';
+import mime from 'mime-types';
 
 // Data storage paths
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -73,6 +74,9 @@ export function saveUploadedFile(
   // Save file to disk
   fs.writeFileSync(filePath, buffer);
 
+  // Determine MIME type
+  const mimeType = mime.lookup(originalName) || 'application/octet-stream';
+
   // Create photo record
   const photo: StoredPhoto = {
     id: photoId,
@@ -82,6 +86,7 @@ export function saveUploadedFile(
     url: `/uploads/${filename}`,
     size: buffer.length,
     uploadedAt: new Date().toISOString(),
+    mimeType,
   };
 
   photos[photoId] = photo;

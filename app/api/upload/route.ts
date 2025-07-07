@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { NextApiRequest } from 'next';
 import multer from 'multer';
 import { getCurrentUser } from '@/lib/auth-mongo';
-import { uploadImage } from '@/lib/gridfs';
+import { uploadFile } from '@/lib/gridfs';
 import Photo from '@/models/Photo';
 import connectDB from '@/lib/mongodb';
 
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     // Upload to GridFS
     console.log('Starting GridFS upload...');
-    const gridfsId = await uploadImage(buffer, filename, {
+    const gridfsId = await uploadFile(buffer, filename, {
       userId: user._id,
       originalName: file.name,
       mimeType: file.type,
