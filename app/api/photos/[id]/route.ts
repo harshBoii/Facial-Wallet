@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-mongo';
-import { downloadImage } from '@/lib/gridfs';
+import { downloadFile, deleteFile } from '@/lib/gridfs';
 import Photo from '@/models/Photo';
 import connectDB from '@/lib/mongodb';
 
@@ -43,7 +43,7 @@ export async function GET(
 
     // Download image from GridFS
     console.log('Downloading image from GridFS...');
-    const imageBuffer = await downloadImage(photo.gridfsId);
+    const imageBuffer = await downloadFile(photo.gridfsId);
     console.log('Image downloaded, size:', imageBuffer.length);
 
     // Return image with proper headers for Next.js Image optimization
@@ -104,8 +104,7 @@ export async function DELETE(
     }
 
     // Delete from GridFS
-    const { deleteImage } = await import('@/lib/gridfs');
-    await deleteImage(photo.gridfsId);
+    await deleteFile(photo.gridfsId);
 
     // Delete metadata from database
     await Photo.findByIdAndDelete(params.id);

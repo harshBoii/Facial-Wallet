@@ -5,6 +5,7 @@ export interface Photo {
   size: number;
   uploadedAt: string;
   url: string;
+  mimeType: string;
 }
 
 export interface User {

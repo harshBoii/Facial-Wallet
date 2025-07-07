@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       size: photo.size,
       uploadedAt: photo.uploadedAt,
       url: `/api/photos/${photo._id}`,
+      mimeType: photo.mimeType,
     }));
 
     console.log('Returning photos:', photosWithUrls);
