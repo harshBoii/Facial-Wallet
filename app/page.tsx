@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import FaceRecognition from '@/components/FaceRecognition';
 import PhotoUpload from '@/components/PhotoUpload';
+import FileUploadTabs from '@/components/FileUploadTabs'; 
 import PhotoGallery from '@/components/PhotoGallery';
 import { Photo } from '@/types';
 
@@ -14,6 +15,7 @@ export default function Home() {
   const [isEnrolling, setIsEnrolling] = useState(true);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [showPhotoGallery, setShowPhotoGallery] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -58,6 +60,7 @@ export default function Home() {
       setShowEnrollment(false);
       setShowPhotoUpload(false);
       setShowPhotoGallery(false);
+      setShowFileUpload(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -91,6 +94,17 @@ export default function Home() {
 
   const handlePhotoUploadError = (error: string) => {
     console.error('Photo upload error:', error);
+    alert(`Upload failed: ${error}`);
+  };
+
+  const handleFileUploadSuccess = (file: File) => {
+    console.log('File uploaded successfully:', file);
+    // Optionally refresh the file upload tabs
+    setShowFileUpload(true);
+  };
+  
+  const handleFileUploadError = (error: string) => {
+    console.error('File upload error:', error);
     alert(`Upload failed: ${error}`);
   };
 
@@ -248,7 +262,7 @@ export default function Home() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Welcome back!</h2>
-            <div className="flex space-x-3">
+            {/* <div className="flex space-x-3">
               <button
                 onClick={() => {
                   setShowPhotoUpload(!showPhotoUpload);
@@ -275,29 +289,72 @@ export default function Home() {
               >
                 View Gallery
               </button>
-            </div>
+            </div> */}
+            
           </div>
-
           {user && (
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Account Info</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Name:</span> {user.name}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-lg border border-blue-200 p-8 mb-6">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-4">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
+                <h3 className="text-xl font-bold text-gray-900">Account Information</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Name</p>
+                    <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                  </div>
+                </div>
+
                 {user.email && (
-                  <div>
-                    <span className="font-medium text-gray-700">Email:</span> {user.email}
+                  <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</p>
+                      <p className="text-sm font-semibold text-gray-900">{user.email}</p>
+                    </div>
                   </div>
                 )}
+
                 {user.phone && (
-                  <div>
-                    <span className="font-medium text-gray-700">Phone:</span> {user.phone}
+                  <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</p>
+                      <p className="text-sm font-semibold text-gray-900">{user.phone}</p>
+                    </div>
                   </div>
                 )}
+
                 {user.bio && (
-                  <div className="md:col-span-2">
-                    <span className="font-medium text-gray-700">Bio:</span> {user.bio}
+                  <div className="flex items-start p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Bio</p>
+                      <p className="text-sm text-gray-700 leading-relaxed">{user.bio}</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -326,38 +383,41 @@ export default function Home() {
 
         {/* Default Welcome Message */}
         {!showPhotoUpload && !showPhotoGallery && (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+            <div className="text-slate-400 mb-6">
+              <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Photo Wallet</h3>
-            <p className="text-gray-600 mb-6">
-              Upload and manage your photos securely. Use the buttons above to get started.
+            <h3 className="text-xl font-semibold text-slate-800 mb-3">Welcome to Photo Wallet</h3>
+            <p className="text-slate-600 mb-8 leading-relaxed max-w-md mx-auto">
+              Upload and manage your photos securely
             </p>
-            <div className="flex justify-center space-x-4">
+            <div className="flex justify-center">
               <button
                 onClick={() => {
-                  setShowPhotoUpload(true);
-                  setShowPhotoGallery(false);
+                  router.push('/dashboard');
                 }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                className="bg-slate-700 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
               >
-                Upload Photo
-              </button>
-              <button
-                onClick={() => {
-                  setShowPhotoGallery(true);
-                  setShowPhotoUpload(false);
-                }}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
-              >
-                View Gallery
+                Visit Dashboard
               </button>
             </div>
           </div>
         )}
+        
+                <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-lg shadow-sm border border-slate-200 p-6 mb-6 animate-fade-in-up">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center animate-slide-in-left">
+                    <svg className="w-5 h-5 mr-2 text-blue-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Do Quick Upload
+                  </h3>
+                  <div className="animate-fade-in-delay">
+                    <FileUploadTabs />
+                  </div>
+                </div>
+
       </main>
     </div>
   );

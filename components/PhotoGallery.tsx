@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Photo } from '@/types';
+import Folder from './Folder';
+
 
 interface PhotoGalleryProps {
   onPhotoSelect?: (photo: Photo) => void;
@@ -69,12 +71,12 @@ export default function PhotoGallery({ onPhotoSelect }: PhotoGalleryProps) {
     (p.mimeType.includes('pdf') || p.mimeType.includes('word') || (p.mimeType.startsWith('application/') && !p.mimeType.includes('excel') && !p.mimeType.includes('spreadsheet') && !p.mimeType.includes('word') && !p.mimeType.includes('pdf')))
   );
 
-  const folders = [
-    { key: 'images', label: 'Images', icon: '🖼️', items: images },
-    { key: 'videos', label: 'Videos', icon: '🎬', items: videos },
-    { key: 'audios', label: 'Audio', icon: '🎵', items: audios },
-    { key: 'excels', label: 'Excel Files', icon: '📊', items: excels },
-    { key: 'documents', label: 'Documents', icon: '📄', items: documents },
+  const folderConfigs = [
+    { key: 'images', label: 'Images', color: '#3B82F6', items: images },
+    { key: 'videos', label: 'Videos', color: '#EF4444', items: videos },
+    { key: 'audios', label: 'Audio', color: '#10B981', items: audios },
+    { key: 'excels', label: 'Excel Files', color: '#F59E0B', items: excels },
+    { key: 'documents', label: 'Documents', color: '#8B5CF6', items: documents },
   ];
 
   if (loading) {
@@ -101,25 +103,33 @@ export default function PhotoGallery({ onPhotoSelect }: PhotoGalleryProps) {
 
   if (!openFolder) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-4">
-        {folders.map(folder => (
-          <button
-            key={folder.key}
-            className="flex flex-col items-center justify-center bg-gray-100 rounded-lg shadow hover:bg-blue-50 transition p-6 cursor-pointer h-40"
-            onClick={() => setOpenFolder(folder.key)}
-            disabled={folder.items.length === 0}
-            style={{ opacity: folder.items.length === 0 ? 0.5 : 1 }}
-          >
-            <span className="text-5xl mb-2">{folder.icon}</span>
-            <span className="font-semibold text-lg mb-1">{folder.label}</span>
-            <span className="text-xs text-gray-500">{folder.items.length} file{folder.items.length !== 1 ? 's' : ''}</span>
-          </button>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 p-6">
+        {folderConfigs.map(folder => (
+          <div key={folder.key} className="flex flex-col items-center">
+            <div 
+              className="cursor-pointer"
+              onClick={() => setOpenFolder(folder.key)}
+              style={{ opacity: folder.items.length === 0 ? 0.5 : 1 }}
+            >
+              <div style={{ height: '120px', position: 'relative' }}>
+                <Folder 
+                  size={1} 
+                  color={folder.color} 
+                  className="custom-folder" 
+                />
+              </div>
+            </div>
+            <div className="text-center mt-0">
+              <h3 className="font-semibold text-lg">{folder.label}</h3>
+              <p className="text-sm text-gray-500">{folder.items.length} file{folder.items.length !== 1 ? 's' : ''}</p>
+            </div>
+          </div>
         ))}
       </div>
     );
   }
 
-  const currentFolder = folders.find(f => f.key === openFolder);
+  const currentFolder = folderConfigs.find(f => f.key === openFolder);
 
   return (
     <div>
@@ -130,7 +140,13 @@ export default function PhotoGallery({ onPhotoSelect }: PhotoGalleryProps) {
         ← Back to Folders
       </button>
       <h3 className="text-lg font-semibold mb-3 flex items-center">
-        <span className="mr-2 text-2xl">{currentFolder?.icon}</span>
+        <span className="mr-2 text-2xl">
+          {openFolder === 'images' && '🖼️'}
+          {openFolder === 'videos' && '🎬'}
+          {openFolder === 'audios' && '🎵'}
+          {openFolder === 'excels' && '📊'}
+          {openFolder === 'documents' && '📄'}
+        </span>
         {currentFolder?.label}
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

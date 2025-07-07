@@ -166,7 +166,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 mt-20">
         <div className="bg-white rounded-lg shadow-sm border">
           {/* Profile Header */}
           <div className="px-6 py-4 border-b border-gray-200">
@@ -191,13 +191,13 @@ export default function ProfilePage() {
           </div>
 
           {/* Profile Form */}
-          <div className="p-6">
+          <div className="p-8 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-100 ">
             {isEditing ? (
-              <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Name */}
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-3">
+                    <label htmlFor="name" className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
                       Full Name
                     </label>
                     <input
@@ -206,15 +206,15 @@ export default function ProfilePage() {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
                       placeholder="Enter your full name"
                       required
                     />
                   </div>
 
                   {/* Email */}
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-3">
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
                       Email Address
                     </label>
                     <input
@@ -223,14 +223,14 @@ export default function ProfilePage() {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
                       placeholder="Enter your email address"
                     />
                   </div>
 
                   {/* Phone */}
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-3">
+                    <label htmlFor="phone" className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
                       Phone Number
                     </label>
                     <input
@@ -239,30 +239,30 @@ export default function ProfilePage() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
                       placeholder="Enter your phone number"
                     />
                   </div>
 
                   {/* Bio */}
-                  <div className="md:col-span-2">
-                    <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-                      Bio
+                  <div className="lg:col-span-2 space-y-3">
+                    <label htmlFor="bio" className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
+                      Professional Bio
                     </label>
                     <textarea
                       id="bio"
                       name="bio"
                       value={formData.bio}
                       onChange={handleInputChange}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Tell us about yourself..."
+                      rows={5}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm resize-none"
+                      placeholder="Tell us about your professional background and expertise..."
                     />
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-end space-x-4 mt-6 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-end space-x-6 pt-8 border-t-2 border-gray-100">
                   <button
                     type="button"
                     onClick={() => {
@@ -274,70 +274,91 @@ export default function ProfilePage() {
                         bio: profile?.bio || '',
                       });
                     }}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                    className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-all duration-200 font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  <p className="text-gray-900">{profile?.name || 'Not provided'}</p>
-                </div>
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Name */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
+                      Full Name
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                      <p className="text-gray-900 font-medium">{profile?.name || 'Not provided'}</p>
+                    </div>
+                  </div>
 
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
-                  </label>
-                  <p className="text-gray-900">{profile?.email || 'Not provided'}</p>
-                </div>
+                  {/* Email */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
+                      Email Address
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                      <p className="text-gray-900 font-medium">{profile?.email || 'Not provided'}</p>
+                    </div>
+                  </div>
 
-                {/* Phone */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
-                  </label>
-                  <p className="text-gray-900">{profile?.phone || 'Not provided'}</p>
-                </div>
+                  {/* Phone */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
+                      Phone Number
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                      <p className="text-gray-900 font-medium">{profile?.phone || 'Not provided'}</p>
+                    </div>
+                  </div>
 
-                {/* Bio */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bio
-                  </label>
-                  <p className="text-gray-900">{profile?.bio || 'No bio provided'}</p>
+                  {/* Bio */}
+                  <div className="lg:col-span-2 space-y-3">
+                    <label className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
+                      Professional Bio
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 min-h-[120px]">
+                      <p className="text-gray-900 leading-relaxed">{profile?.bio || 'No bio provided'}</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Account Info */}
-                <div className="md:col-span-2 pt-6 border-t border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="pt-8 border-t-2 border-gray-100">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    <span className="w-2 h-8 bg-blue-600 rounded-full mr-4"></span>
+                    Account Information
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
                         User ID
                       </label>
-                      <p className="text-sm text-gray-500 font-mono">{profile?.id}</p>
+                      <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <p className="text-sm text-gray-600 font-mono">{profile?.id}</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-semibold text-gray-800 tracking-wide uppercase">
                         Member Since
                       </label>
-                      <p className="text-sm text-gray-500">
-                        {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Unknown'}
-                      </p>
+                      <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <p className="text-sm text-gray-600 font-medium">
+                          {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          }) : 'Unknown'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

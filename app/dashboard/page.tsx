@@ -24,7 +24,8 @@ export default function DashboardPage() {
         }
         
         const userData = await response.json();
-        setUser(userData);
+        // Extract the user object from the response
+        setUser(userData.user);
         
         // Load user's photos
         await loadPhotos();
@@ -117,10 +118,45 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
+          {/* User Info Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Account Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-500 mb-1">Name</p>
+                <p className="font-semibold text-gray-900">{user.name || 'Not set'}</p>
+              </div>
+              {user.email && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500 mb-1">Email</p>
+                  <p className="font-semibold text-gray-900">{user.email}</p>
+                </div>
+              )}
+              {user.phone && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500 mb-1">Phone</p>
+                  <p className="font-semibold text-gray-900">{user.phone}</p>
+                </div>
+              )}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-500 mb-1">User ID</p>
+                <p className="font-mono text-sm text-gray-600">{user.id}</p>
+              </div>
+              {user.bio && (
+                <div className="p-4 bg-gray-50 rounded-lg md:col-span-2 lg:col-span-3">
+                  <p className="text-sm text-gray-500 mb-1">Bio</p>
+                  <p className="text-gray-900">{user.bio}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* File Upload Tabs Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Upload Files (All Types)
+              Upload Files 
             </h2>
             <FileUploadTabs />
           </div>
@@ -139,7 +175,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
-                Your Photos ({photos.length})
+                Your Files ({photos.length})
               </h2>
               <button
                 onClick={() => router.push('/gallery')}
