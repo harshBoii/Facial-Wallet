@@ -125,7 +125,7 @@ export default function DashboardPage() {
             <FileUploadTabs />
           </div>
           {/* Upload Section */}
-          <div className="bg-white rounded-lg shadow p-6">
+          {/* <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Upload New Photo
             </h2>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
               onUploadSuccess={handlePhotoUploaded}
               onUploadError={(error) => console.error('Upload error:', error)}
             />
-          </div>
+          </div> */}
 
           {/* Gallery Section */}
           <div className="bg-white rounded-lg shadow p-6">
