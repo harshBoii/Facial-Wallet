@@ -7,6 +7,7 @@ import PhotoUpload from '@/components/PhotoUpload';
 import FileUploadTabs from '@/components/FileUploadTabs'; 
 import PhotoGallery from '@/components/PhotoGallery';
 import { Photo } from '@/types';
+import EmailForm from '@/components/EmailForm';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,6 +19,8 @@ export default function Home() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -68,15 +71,33 @@ export default function Home() {
 
   const handleEnrollmentSuccess = (userId: string) => {
     setIsEnrolled(true);
-    setIsAuthenticated(true);
+    setIsAuthenticated(false);
     setShowEnrollment(false);
-    // After successful enrollment, the user should be authenticated
-    // We can set a basic user object since we have the userId
-    setUser({
-      id: userId,
-      name: 'User',
-      createdAt: new Date().toISOString()
-    });
+    setPendingUserId(userId);
+    setShowEmailForm(true);
+  };
+
+  const handleEmailSubmit = async (email: string) => {
+    if (!pendingUserId) return;
+    try {
+      const response = await fetch('/api/auth/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: pendingUserId, email }),
+        credentials: 'include',
+      });
+      if (response.ok) {
+        setIsAuthenticated(true);
+        setUser((prev: any) => ({ ...prev, email }));
+        setShowEmailForm(false);
+        setPendingUserId(null);
+      } else {
+        const error = await response.text();
+        alert(`Failed to save email: ${error}`);
+      }
+    } catch (error) {
+      alert('Failed to save email.');
+    }
   };
 
   const handleAuthenticationSuccess = (userId: string) => {
@@ -141,7 +162,7 @@ export default function Home() {
                   }}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Enroll Face
+                  Sign Up
                 </button>
                 <button
                   onClick={() => {
@@ -174,15 +195,6 @@ export default function Home() {
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Authenticate
-                </button>
-                <button
-                  onClick={() => {
-                    setIsEnrolling(true);
-                    setShowEnrollment(true);
-                  }}
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Enroll New Face
                 </button>
               </div>
             </div>
@@ -219,6 +231,17 @@ export default function Home() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (showEmailForm && pendingUserId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+          <h2 className="text-2xl font-bold mb-4 text-center">Enter Your Email</h2>
+          <EmailForm onSubmit={handleEmailSubmit} />
         </div>
       </div>
     );

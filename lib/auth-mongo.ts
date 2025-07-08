@@ -352,3 +352,11 @@ export async function verifyEmailOtp(email: string, otp: string): Promise<{ succ
   const sessionId = await createSession(user._id.toString());
   return { success: true, message: 'Login successful', sessionId };
 }
+
+export async function updateUserEmail(userId: string, email: string): Promise<{ success: boolean; message: string }> {
+  await connectDB();
+  if (!userId || !email) return { success: false, message: 'User ID and email required' };
+  const user = await User.findByIdAndUpdate(userId, { email }, { new: true });
+  if (!user) return { success: false, message: 'User not found' };
+  return { success: true, message: 'Email updated' };
+}

@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requestEmailLogin, verifyEmailOtp } from '@/lib/auth-mongo';
+import { requestEmailLogin, verifyEmailOtp, updateUserEmail } from '@/lib/auth-mongo';
 
 export async function POST(request: NextRequest) {
   try {
     const url = request.nextUrl.pathname;
     const body = await request.json();
+    if (body.userId && body.email && !url.endsWith('/verify')) {
+      const result = await updateUserEmail(body.userId, body.email);
+      if (!result.success) {
+        return NextResponse.json({ error: result.message }, { status: 400 });
+      }
+      return NextResponse.json({ message: 'Email saved successfully' });
+    }
     if (url.endsWith('/verify')) {
       // OTP verification
       const { email, otp } = body;
