@@ -1,4 +1,4 @@
-# Photo Wallet - Facial Recognition Photo Storage
+# Vaulture - Facial Recognition Photo Storage
 
 A secure photo storage application with facial recognition authentication using Next.js, face-api.js, and MongoDB.
 

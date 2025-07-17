@@ -6,8 +6,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Photo Wallet - Facial Recognition App',
-  description: 'A secure photo wallet with facial recognition authentication',
+  title: 'Vaulture - Facial Recognition App',
+  description: 'A secure vault with facial recognition authentication',
 };
 
 export default function RootLayout({

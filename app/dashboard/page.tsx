@@ -91,7 +91,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-slate-800">
-                Photo Wallet
+                <img src="/logo.png"  alt="Vaulture" className='w-60 h-30' />
               </h1>
             </div>
             <div className="flex items-center space-x-4">
